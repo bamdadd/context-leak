@@ -53,8 +53,8 @@ The headline is the *pair*: withhold the attribute from forbidden recipients **w
 
 ```bash
 uv sync
-# coming soon — offline smoke over the synthetic scenarios (no API keys):
-# uv run context-leak --smoke
+# An offline smoke over the synthetic scenarios (no API keys) is landing next;
+# the exact command is finalized when the runner workstream ships it.
 ```
 
 Until then, the frozen appropriateness-matrix contract is readable in [`src/context_leak/types.py`](src/context_leak/types.py) and [`docs/DESIGN.md`](docs/DESIGN.md).
