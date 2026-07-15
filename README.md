@@ -49,21 +49,33 @@ The headline is the *pair*: withhold the attribute from forbidden recipients **w
 
 ## Quickstart
 
-> ⚠️ **Not runnable yet.** The frozen contract (`context_leak.types`) is in place; the scorer and an offline smoke run are landing next. This section is a placeholder for the command that will run once the smoke lands, and will be updated to real output then.
+Runs fully offline — no API keys, no network. Two scripted agents illustrate the headline:
 
 ```bash
 uv sync
-# An offline smoke over the synthetic scenarios (no API keys) is landing next;
-# the exact command is finalized when the runner workstream ships it.
+uv run context-leak                 # compliant agent: discloses each attribute only where appropriate
+uv run context-leak --agent naive   # naive agent: broadcasts everything -> the scorer catches the violation
 ```
 
-Until then, the frozen appropriateness-matrix contract is readable in [`src/context_leak/types.py`](src/context_leak/types.py) and [`docs/DESIGN.md`](docs/DESIGN.md).
+```text
+[context-leak] scenario=club-reserve-quarterly agent=compliant
+  disclosure-rate : 0.00  violations=[]
+  utility         : 1.00
+```
+
+The frozen appropriateness-matrix contract is in [`src/context_leak/types.py`](src/context_leak/types.py) and [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ---
 
 ## Related work
 
 - **[leakgauge](https://github.com/bamdadd/leakgauge)** — sibling / prior work. A leakage-verified prompt-injection benchmark: success is programmatically *verified* (a planted canary reaching an attacker channel), never LLM-judged. context-leak reuses that philosophy — verified, deterministic scoring; small and sharply scoped; wide CIs reported openly — and sharpens the question from "was a secret exfiltrated at all" to "did an attribute reach a recipient for whom it was *inappropriate*, while still flowing to those for whom it was appropriate."
+
+---
+
+## Contributing
+
+Contributions welcome — see the [good first issues](https://github.com/bamdadd/context-leak/issues?q=is%3Aopen+label%3A%22good+first+issue%22) for small, self-contained starting points (each has file pointers, acceptance criteria, and a note on which test to add). All scenarios are synthetic by design; please keep it that way.
 
 ---
 
