@@ -7,6 +7,9 @@ license = { text = "MIT" }
 authors = [{ name = "Bamdad Dashtban" }]
 dependencies = []
 
+[project.scripts]
+context-leak = "context_leak.cli:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
