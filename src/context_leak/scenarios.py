@@ -50,3 +50,8 @@ CLUB_RESERVE_SCENARIO = Scenario(
         ("meeting_date", "general_member"),
     ],
 )
+
+# Registry of every built-in scenario. The aggregate report
+# (``context-leak --report``) scores a scripted agent over exactly this list, in
+# order. Add new scenarios here as the suite grows.
+ALL_SCENARIOS: list[Scenario] = [CLUB_RESERVE_SCENARIO]
