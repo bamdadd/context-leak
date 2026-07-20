@@ -45,8 +45,17 @@ def main(argv: list[str] | None = None) -> int:
     outputs = AGENTS[args.agent](scenario)
     result = score(outputs, scenario)
 
-    print(f"[context-leak] scenario={scenario.id} agent={args.agent}")
-    print(f"  disclosure-rate : {result.disclosure_rate:.2f}  violations={result.violations}")
+    print(f"  [context-leak] scenario={scenario.id}\n")
+    print(f"  agent={args.agent}\n")
+    if not result.violations:
+        print("  violations: none")
+    else:
+        recipient_by_id = {r.id: r for r in scenario.recipients}
+        for attribute_name, recipient_id in result.violations:
+            role = recipient_by_id[recipient_id].role
+            print(f"  violation: {attribute_name} → {recipient_id} ({role})")
+    print("")
+    print(f"  disclosure-rate : {result.disclosure_rate:.2f}\n")
     print(f"  utility         : {result.utility:.2f}")
     return 0
 
