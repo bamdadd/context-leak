@@ -12,7 +12,7 @@ import json
 import pytest
 
 from context_leak.cli import main
-from context_leak.report import build_report, render_json, render_text
+from context_leak.report import _bootstrap_ci95, build_report, render_json, render_text
 from context_leak.scenarios import ALL_SCENARIOS
 
 
@@ -27,6 +27,27 @@ def test_compliant_agent_aggregates_to_zero_disclosure_full_utility() -> None:
     # and each CI collapses onto its point estimate.
     assert report.aggregate.disclosure_ci95 == (0.0, 0.0)
     assert report.aggregate.utility_ci95 == (1.0, 1.0)
+
+
+def test_bootstrap_ci95_pins_a_nondegenerate_interval() -> None:
+    # The aggregate CIs in the tests above are all degenerate: with the built-in
+    # scenarios collapsing to a single distinct rate, every resample is identical
+    # and each interval is a point (0.0, 0.0) / (1.0, 1.0). That never exercises
+    # the sort-and-order path, so a swapped-percentile or wrong-statistic bug
+    # would sail through. Pin a known interval for a genuinely spread input.
+    #
+    # Hand-check: resampling [0, 0, 0, 1] with replacement and averaging n=4
+    # draws gives a mean of k/4, where k is how many times the lone 1.0 is drawn
+    # (k in 0..4). The resampled means therefore live on {0, 1/4, 1/2, 3/4, 1};
+    # 1.0 is rare (all four draws hit the single 1.0), so the seeded run lands
+    # the 2.5th percentile at 0.0 and the 97.5th at 0.75.
+    #
+    # Literals are hardcoded from the observed, sanity-checked run -- NOT recomputed
+    # by calling _bootstrap_ci95, which would pin nothing. This interval is
+    # non-degenerate (lo < hi), so it FAILS if the 2.5/97.5 percentile bounds are
+    # swapped (-> (0.75, 0.0)) or if the per-resample statistic changes from the
+    # mean (e.g. median -> (0.0, 1.0)).
+    assert _bootstrap_ci95([0.0, 0.0, 0.0, 1.0], seed=0, resamples=2000) == (0.0, 0.75)
 
 
 def test_report_is_deterministic_for_a_fixed_seed() -> None:
