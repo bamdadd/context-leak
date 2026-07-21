@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 
 from context_leak.report import AGENTS, run_report
-from context_leak.scenarios import CLUB_RESERVE_SCENARIO
+from context_leak.scenarios import ALL_SCENARIOS, CLUB_RESERVE_SCENARIO
 from context_leak.scoring import score
 
 
@@ -33,7 +33,25 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="with --report, emit JSON instead of the text table",
     )
+    parser.add_argument(
+        "--scenario",
+        metavar="ID",
+        help="run this scenario by id (see --list-scenarios); "
+        "defaults to the club-reserve scenario",
+    )
+    parser.add_argument(
+        "--list-scenarios",
+        action="store_true",
+        help="print the available scenario ids and exit",
+    )
     args = parser.parse_args(argv)
+
+    scenarios_by_id = {scenario.id: scenario for scenario in ALL_SCENARIOS}
+
+    if args.list_scenarios:
+        for scenario_id in scenarios_by_id:
+            print(scenario_id)
+        return 0
 
     if args.json and not args.report:
         parser.error("--json requires --report")
@@ -41,7 +59,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.report:
         return run_report(args.agent, json_out=args.json)
 
-    scenario = CLUB_RESERVE_SCENARIO
+    if args.scenario is None:
+        scenario = CLUB_RESERVE_SCENARIO
+    elif args.scenario in scenarios_by_id:
+        scenario = scenarios_by_id[args.scenario]
+    else:
+        parser.error(
+            f"unknown scenario {args.scenario!r}; "
+            f"available: {', '.join(scenarios_by_id)} (see --list-scenarios)"
+        )
+
     outputs = AGENTS[args.agent](scenario)
     result = score(outputs, scenario)
 
