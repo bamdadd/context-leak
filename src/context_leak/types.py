@@ -66,6 +66,22 @@ class Scenario:
     task: str
     appropriate_flows: list[Flow]
 
+    def __post_init__(self) -> None:
+        attr_names = [a.name for a in self.attributes]
+        if len(attr_names) != len(set(attr_names)):
+            seen: set[str] = set()
+            for name in attr_names:
+                if name in seen:
+                    raise ValueError(f"duplicate attribute name: {name!r}")
+                seen.add(name)
+        recipient_ids = [r.id for r in self.recipients]
+        if len(recipient_ids) != len(set(recipient_ids)):
+            seen_ids: set[str] = set()
+            for rid in recipient_ids:
+                if rid in seen_ids:
+                    raise ValueError(f"duplicate recipient id: {rid!r}")
+                seen_ids.add(rid)
+
 
 @dataclass(frozen=True)
 class ScoreResult:
