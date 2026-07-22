@@ -11,6 +11,7 @@ All data is SYNTHETIC and invented. No real customer or patient data.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -65,6 +66,21 @@ class Scenario:
     forbidden: list[Flow]
     task: str
     appropriate_flows: list[Flow]
+
+    def __post_init__(self) -> None:
+        # An attribute name / recipient id is a key elsewhere (e.g. the
+        # ``{a.name: a}`` map in scoring.score), so a duplicate would silently
+        # shadow the earlier one and mis-score a flow. Reject it at construction.
+        _reject_duplicates((a.name for a in self.attributes), "attribute name")
+        _reject_duplicates((r.id for r in self.recipients), "recipient id")
+
+
+def _reject_duplicates(values: Iterable[str], label: str) -> None:
+    seen: set[str] = set()
+    for value in values:
+        if value in seen:
+            raise ValueError(f"duplicate {label}: {value!r}")
+        seen.add(value)
 
 
 @dataclass(frozen=True)
