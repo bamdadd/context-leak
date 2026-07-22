@@ -14,6 +14,7 @@ on each aggregate rate (see ``report.py`` and docs/DESIGN.md §2 "Rigor").
 from __future__ import annotations
 
 import argparse
+import json
 
 from context_leak.report import AGENTS, run_report
 from context_leak.scenarios import ALL_SCENARIOS, CLUB_RESERVE_SCENARIO
@@ -31,7 +32,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--json",
         action="store_true",
-        help="with --report, emit JSON instead of the text table",
+        help="emit JSON instead of text — a single-run object, or the "
+        "aggregate table with --report",
     )
     parser.add_argument(
         "--scenario",
@@ -53,9 +55,6 @@ def main(argv: list[str] | None = None) -> int:
             print(scenario_id)
         return 0
 
-    if args.json and not args.report:
-        parser.error("--json requires --report")
-
     if args.report:
         return run_report(args.agent, json_out=args.json)
 
@@ -71,6 +70,20 @@ def main(argv: list[str] | None = None) -> int:
 
     outputs = AGENTS[args.agent](scenario)
     result = score(outputs, scenario)
+
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "scenario": scenario.id,
+                    "agent": args.agent,
+                    "disclosure_rate": result.disclosure_rate,
+                    "utility": result.utility,
+                    "violations": [list(flow) for flow in result.violations],
+                }
+            )
+        )
+        return 0
 
     print(f"  [context-leak] scenario={scenario.id}\n")
     print(f"  agent={args.agent}\n")
