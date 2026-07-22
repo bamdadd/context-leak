@@ -38,3 +38,33 @@ def test_default_scenario_unchanged(capsys: pytest.CaptureFixture[str]) -> None:
     rc = main([])
     assert rc == 0
     assert "scenario=club-reserve-quarterly" in capsys.readouterr().out
+
+
+def test_json_flag_emits_one_parseable_object(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import json
+
+    rc = main(["--agent", "naive", "--json"])
+    assert rc == 0
+    out = capsys.readouterr().out.strip()
+    payload = json.loads(out)  # single line of valid JSON
+    assert set(payload) == {
+        "scenario",
+        "agent",
+        "disclosure_rate",
+        "utility",
+        "violations",
+    }
+    assert payload["agent"] == "naive"
+    assert isinstance(payload["disclosure_rate"], float)
+    assert isinstance(payload["utility"], float)
+    # violations render as 2-element [attribute_name, recipient_id] arrays.
+    assert all(isinstance(v, list) and len(v) == 2 for v in payload["violations"])
+
+
+def test_default_output_has_no_json(capsys: pytest.CaptureFixture[str]) -> None:
+    rc = main(["--agent", "naive"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "[context-leak] scenario=" in out  # text path unchanged
