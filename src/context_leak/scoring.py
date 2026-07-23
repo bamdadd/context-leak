@@ -28,13 +28,29 @@ def _normalize(text: str) -> str:
     return _WHITESPACE.sub(" ", folded).strip()
 
 
+def _phrase_present(haystack: str, phrase: str) -> bool:
+    """True iff ``phrase`` appears in ``haystack`` as a bounded surface form.
+
+    Bounds on non-alphanumeric edges so a short confirm like ``yes`` does not
+    match inside ``yesterday``. Multi-word phrases match as contiguous runs.
+    """
+    needle = _normalize(phrase)
+    if not needle:
+        return False
+    pattern = rf"(?:^|[^\w$]){re.escape(needle)}(?:[^\w$]|$)"
+    return re.search(pattern, haystack) is not None
+
+
 def disclosed(output_text: str, attribute: Attribute) -> bool:
-    """True iff ``attribute.value`` or any alias appears in ``output_text`` after
-    normalization. Deterministic; catches verbatim + aliased forms only."""
+    """True iff ``attribute.value``, an alias, or a confirm phrase appears in
+    ``output_text`` after normalization. Deterministic; no paraphrase guessing."""
     haystack = _normalize(output_text)
     for form in (attribute.value, *attribute.aliases):
         needle = _normalize(form)
         if needle and needle in haystack:
+            return True
+    for phrase in attribute.confirm_phrases:
+        if _phrase_present(haystack, phrase):
             return True
     return False
 

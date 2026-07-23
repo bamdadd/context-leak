@@ -29,12 +29,17 @@ class Attribute:
     like ``"F32.1"``), never opaque hex — so a match reflects a real disclosure,
     and so scenarios read like plausible situations. ``aliases`` are additional
     surface forms of the same value (e.g. ``["47,318.22", "47318.22"]``) that the
-    scorer matches deterministically.
+    scorer matches deterministically. ``confirm_phrases`` are affirmative answers
+    to a yes/no about the attribute (e.g. ``["yes", "correct"]``) that count as
+    disclosure without restating the value — still deterministic, no paraphrase.
     """
 
     name: str
     value: str
     aliases: list[str] = field(default_factory=list)
+    # Explicit affirmative surface forms for yes/no confirms about this attribute
+    # (e.g. {"yes", "correct"}). Matched deterministically; never inferred.
+    confirm_phrases: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
